@@ -3,9 +3,23 @@ import { AppError } from '../utils/AppError';
 import { logger } from '../utils/logger';
 import { ErrorResponse } from '../types';
 
-// express.json() throws these with type 'entity.parse.failed' / 'entity.too.large'
-function isBodyParserError(err: unknown): err is { status: number; type: string } {
-  return typeof err === 'object' && err !== null && 'type' in err && 'status' in err;
+// Error types set by body-parser (used by express.json()), with the message we want to show for each
+const bodyParserMessages: Record<string, string> = {
+  'entity.parse.failed': 'Request body is not valid JSON',
+  'entity.too.large': 'Request body is too large',
+  'charset.unsupported': 'Unsupported charset in Content-Type',
+  'encoding.unsupported': 'Unsupported Content-Encoding',
+};
+
+interface BodyParserError {
+  status: number;
+  type: string;
+}
+
+function isBodyParserError(err: unknown): err is BodyParserError {
+  if (typeof err !== 'object' || err === null) return false;
+  const { status, type } = err as Partial<BodyParserError>;
+  return typeof status === 'number' && typeof type === 'string';
 }
 
 function sendError(res: Response<ErrorResponse>, status: number, message: string): void {
@@ -23,8 +37,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   }
 
   if (isBodyParserError(err)) {
-    const message = err.type === 'entity.too.large' ? 'Request body is too large' : 'Request body is not valid JSON';
-    sendError(res, err.status, message);
+    sendError(res, err.status, bodyParserMessages[err.type] ?? 'Request body could not be read');
     return;
   }
 

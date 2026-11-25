@@ -6,13 +6,23 @@ mongoose.set('sanitizeFilter', true);
 mongoose.set('strictQuery', true);
 
 export async function connectDb(uri: string): Promise<void> {
-  await mongoose.connect(uri);
-  logger.info({ database: mongoose.connection.name }, 'Connected to MongoDB');
+  try {
+    await mongoose.connect(uri);
+    logger.info({ database: mongoose.connection.name }, 'Connected to MongoDB');
+  } catch (err) {
+    logger.error({ err }, 'Could not connect to MongoDB');
+    throw err;
+  }
 }
 
 export async function disconnectDb(): Promise<void> {
-  await mongoose.disconnect();
-  logger.info('Disconnected from MongoDB');
+  try {
+    await mongoose.disconnect();
+    logger.info('Disconnected from MongoDB');
+  } catch (err) {
+    logger.error({ err }, 'Could not close the MongoDB connection');
+    throw err;
+  }
 }
 
 export function isDbConnected(): boolean {

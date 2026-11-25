@@ -7,7 +7,7 @@ This is still being built, so for now only the backend skeleton is here.
 
 ## Requirements
 
-- Node.js 20.12 or newer
+- Node.js 22.12 or newer
 - MongoDB Community Server running locally on port 27017
 
 ## Running the backend
